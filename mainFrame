@@ -1,0 +1,93 @@
+import tkinter as tk
+from tkinter import ttk, messagebox
+from Game import Game
+
+def main():
+    game = Game()
+    player1, player2 = '', ''
+    current_player = [1]
+    game_over = [False]
+
+    def choose_player():
+        p1 = choose_entry.get().upper()
+        if p1 not in ['X', 'O']:
+            messagebox.showerror("Invalid Input", "Please enter either 'X' or 'O'")
+            return
+        nonlocal player1, player2
+        player1 = p1
+        player2 = 'O' if p1 == 'X' else 'X'
+        game_label.config(text=f"Player 1 chose: {player1}")
+        card_layout.show_frame("game")
+
+    def on_button_click(x, y):
+        if game_over[0]:
+            return
+
+        current_symbol = player1 if current_player[0] == 1 else player2
+        if game.play(x, y, current_symbol):
+            buttons[x][y].config(text=current_symbol)
+            if game.check_Win(current_symbol):
+                game_label.config(text=f"Player {current_player[0]} wins!")
+                game_over[0] = True
+                disable_buttons()
+            elif game.check_draw():
+                game_label.config(text="It's a draw!")
+                game_over[0] = True
+                disable_buttons()
+            else:
+                current_player[0] = 2 if current_player[0] == 1 else 1
+                game_label.config(text=f"Player {current_player[0]}'s turn: {player1 if current_player[0] == 1 else player2}")
+        else:
+            messagebox.showerror("Invalid Move", "This position is already taken. Choose again.")
+
+    def disable_buttons():
+        for row in buttons:
+            for button in row:
+                button.config(state=tk.DISABLED)
+
+    root = tk.Tk()
+    root.title("Tic-Tac-Toe")
+    root.geometry("400x300")
+    root.resizable(False, False)
+
+    card_layout = ttk.Frame(root)
+    card_layout.pack(expand=True, fill="both")
+
+    choose_frame = ttk.Frame(card_layout)
+    game_frame = ttk.Frame(card_layout)
+    card_layout.frames = {"choose": choose_frame, "game": game_frame}
+
+    def show_frame(name):
+        frame = card_layout.frames[name]
+        frame.tkraise()
+
+    card_layout.show_frame = show_frame
+
+    choose_frame.grid(row=0, column=0, sticky="nsew")
+    game_frame.grid(row=0, column=0, sticky="nsew")
+
+    choose_label = ttk.Label(choose_frame, text="Player 1 choose X or O:")
+    choose_entry = ttk.Entry(choose_frame)
+    choose_button = ttk.Button(choose_frame, text="Choose", command=choose_player)
+
+    choose_label.pack(pady=10)
+    choose_entry.pack(pady=10)
+    choose_button.pack(pady=10)
+
+    buttons_frame = ttk.Frame(game_frame)
+    buttons_frame.pack(expand=True)
+
+    buttons = [[ttk.Button(buttons_frame, text="", style='TButton', command=lambda x=i, y=j: on_button_click(x, y)) for j in range(3)] for i in range(3)]
+    for i in range(3):
+        for j in range(3):
+            buttons[i][j].grid(row=i, column=j, ipadx=10, ipady=10)
+
+    game_label = ttk.Label(game_frame, text="", font=('Arial', 16))
+    game_label.pack(pady=10)
+
+    show_frame("choose")
+
+    root.mainloop()
+
+if __name__ == "__main__":
+    main()
